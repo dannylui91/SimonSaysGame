@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     public Button green_button;
     public Button red_button;
     public Button blue_button;
@@ -31,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
     public TextView round_view;
     public int delay = 3000;
+
+    public int delayForRoundView = 0;
 
     public static int rounds = 1;
 
@@ -56,56 +58,39 @@ public class MainActivity extends AppCompatActivity {
 
         //play the first round
         playRounds();
-
     }
 
     private void initButtonClicks() {
-        green_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        green_button.setOnClickListener(this);
+        red_button.setOnClickListener(this);
+        blue_button.setOnClickListener(this);
+        yellow_button.setOnClickListener(this);
+    }
+
+    public void onClick(View v) {
+        switch(v.getId()) {
+            case R.id.button_green:
                 colorsByPlayer.add("G");
                 checkSolved();
-            }
-        });
-
-        red_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.button_red:
                 colorsByPlayer.add("R");
                 checkSolved();
-            }
-        });
-
-        blue_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.button_blue:
                 colorsByPlayer.add("B");
                 checkSolved();
-            }
-        });
-
-        yellow_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+                break;
+            case R.id.button_yellow:
                 colorsByPlayer.add("Y");
                 checkSolved();
-            }
-        });
-
+                break;
+        }
     }
 
     //method that flashes a single button
     public void flashButton(final Button button, final int resId) {
-
-        int duration = 0;
-        //smoother flash transition when the next button is different
-        /*if (currentButton == button)
-            duration = 75;
-        else
-            currentButton = button;
-        */
-
-        delay+=duration;
+        delay+=500;
         final Drawable originalBackground = button.getBackground();
 
         handler = new Handler();
@@ -125,9 +110,29 @@ public class MainActivity extends AppCompatActivity {
         handler.postDelayed(r2, delay);
     }
 
+    public void blinkRoundView(final TextView textView, final int resId) {
+        handler = new Handler();
+        final Runnable r = new Runnable() {
+            public void run() {
+                textView.setBackgroundResource(0x00000000);
+            }
+        };
+        handler.postDelayed(r, delayForRoundView);
+
+        delayForRoundView+=250;
+        final Runnable r2 = new Runnable() {
+            public void run() {
+                textView.setBackgroundResource(resId);
+            }
+        };
+        handler.postDelayed(r2, delayForRoundView);
+        delayForRoundView = 0;
+    }
+
     public void playRounds() {
-        //set the round text
-        round_view.setText("Round " + rounds);
+        //blink and set the round text
+        blinkRoundView(round_view, R.drawable.round_number_flash_image);
+        round_view.setText(Integer.toString(rounds));
 
         //grab a random color
         colorsByComputer.add(getRandomColor());
@@ -203,11 +208,11 @@ public class MainActivity extends AppCompatActivity {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE); //create a layout inflater
         View layout = inflater.inflate(R.layout.options_layout, null); //use layout inflater to inflate the options_layout.xml into a view
         layout.setAnimation(AnimationUtils.loadAnimation(this, R.anim.popup_show)); //set the animation for this layout
-        final PopupWindow optionspu = new PopupWindow(layout, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT); //create a popupwindow with this view
+        final PopupWindow optionsPopup = new PopupWindow(layout, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT); //create a popupwindow with this view
 
-        optionspu.setOutsideTouchable(false); //outside the popup cannot be clicked
+        optionsPopup.setOutsideTouchable(false); //outside the popup cannot be clicked
         View view = findViewById(R.id.activity_main);  //get the view for activity_main.xml
-        optionspu.showAtLocation(view, Gravity.CENTER, 0, 0); //where in activity_main will this popup be, center with offset 0,0
+        optionsPopup.showAtLocation(view, Gravity.CENTER, 0, 0); //where in activity_main will this popup be, center with offset 0,0
         //optionspu.setAnimationStyle(R.anim.popup_show); //set the popup to this animation, doesn't work? because of setAnimation above?
 
         Button play_again_button = (Button) layout.findViewById(R.id.play_again);
@@ -216,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
         play_again_button.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                optionspu.dismiss();
+                optionsPopup.dismiss();
                 colorsByComputer.clear();
                 colorsByPlayer.clear();
                 rounds = 1;
