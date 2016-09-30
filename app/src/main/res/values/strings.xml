@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Simon Says Game</string>
+    <string name="easy">EASY</string>
+    <string name="normal">NORMAL</string>
+    <string name="hard">HARD</string>
+    <string name="free_play">FREE PLAY</string>
 </resources>

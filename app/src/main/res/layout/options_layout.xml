@@ -9,7 +9,7 @@
     <View
         android:layout_width="350dp"
         android:layout_height="450dp"
-        android:background="@drawable/heavy_lose"
+        android:background="@drawable/bender_crying_image"
         >
     </View>
 
