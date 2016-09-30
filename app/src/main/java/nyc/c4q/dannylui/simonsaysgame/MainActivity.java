@@ -1,15 +1,15 @@
 package nyc.c4q.dannylui.simonsaysgame;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
@@ -65,6 +65,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         red_button.setOnClickListener(this);
         blue_button.setOnClickListener(this);
         yellow_button.setOnClickListener(this);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        //fixme - implement restartQuiz and add a way to save the quiz taker's score
+        switch(item.getItemId()) {
+            case R.id.easy_action:
+            case R.id.normal_action:
+            case R.id.hard_action:
+                Toast.makeText(this, "No implementation found.", Toast.LENGTH_LONG).show();
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public void onClick(View v) {
