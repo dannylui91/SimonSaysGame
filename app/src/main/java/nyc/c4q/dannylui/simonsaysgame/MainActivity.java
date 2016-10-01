@@ -2,10 +2,13 @@ package nyc.c4q.dannylui.simonsaysgame;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -28,17 +31,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button redButton;
     private Button blueButton;
     private Button yellowButton;
-    private TextView round_view;
+    private Button roundView;
+    private Button highScoreView;
 
     private MediaPlayer mpGreenButton;
     private MediaPlayer mpRedButton;
     private MediaPlayer mpBlueButton;
     private MediaPlayer mpYellowButton;
+    private MediaPlayer mpRoundView;
+    private MediaPlayer mpHighScoreView;
 
     private Drawable originalBackgroundG;
     private Drawable originalBackgroundR;
     private Drawable originalBackgroundB;
     private Drawable originalBackgroundY;
+    private Drawable originalBackgroundRV;
 
     private static List<String> colorsByPlayer = new ArrayList<String>();
     private static List<String> colorsByComputer = new ArrayList<String>();
@@ -47,7 +54,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static int delayForRoundView = 0;
     private static int flashDuration = 500;
 
+    private SharedPreferences prefs;
+    private final static String HIGH_SCORE_KEY = "score_key";
+
     private Handler handler;
+    private static int highestScore = 0;
     private static int rounds = 1;
     private static boolean freePlay = false;
 
@@ -61,15 +72,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         redButton = (Button) findViewById(R.id.button_red);
         blueButton = (Button) findViewById(R.id.button_blue);
         yellowButton = (Button) findViewById(R.id.button_yellow);
-        round_view = (TextView) findViewById(R.id.round_view);
+        roundView = (Button) findViewById(R.id.round_view);
+        highScoreView = (Button) findViewById(R.id.high_score);
 
         //initialize button clicks, sounds and original backgrounds
         initButtonClicks();
         initButtonSounds();
         initButtonBackgrounds();
 
+        //set unable to click for these two buttons except during free play
+        roundView.setEnabled(false);
+        highScoreView.setEnabled(false);
 
-        //play the first round
+        //load prefs
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        highScoreView.setText(Integer.toString(prefs.getInt(HIGH_SCORE_KEY, 0)));
+
+        //play the round
         if (!freePlay) {
             playRounds();
         }
@@ -79,7 +98,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         resetGame();
-        playRounds();
     }
 
     //-------------------------------- Buttons Stuff --------------------------------
@@ -88,6 +106,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         redButton.setOnClickListener(this);
         blueButton.setOnClickListener(this);
         yellowButton.setOnClickListener(this);
+        roundView.setOnClickListener(this);
+        highScoreView.setOnClickListener(this);
     }
 
     public void initButtonSounds() {
@@ -95,6 +115,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mpRedButton = MediaPlayer.create(this, R.raw.futurama_bell2);
         mpBlueButton = MediaPlayer.create(this, R.raw.futurama_bell3);
         mpYellowButton = MediaPlayer.create(this, R.raw.futurama_bell4);
+        mpRoundView = MediaPlayer.create(this, R.raw.futurama_bell5);
+        mpHighScoreView = MediaPlayer.create(this, R.raw.futurama_bell6);
     }
 
     public void initButtonBackgrounds() {
@@ -102,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         originalBackgroundR = redButton.getBackground();
         originalBackgroundB = blueButton.getBackground();
         originalBackgroundY = yellowButton.getBackground();
+        originalBackgroundRV = roundView.getBackground();
     }
 
     public void onClick(View v) {
@@ -138,6 +161,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     checkSolved();
                 }
                 break;
+            case R.id.round_view:
+                resetSound();
+                mpRoundView.start();
+                break;
+            case R.id.high_score:
+                resetSound();
+                mpHighScoreView.start();
+                break;
         }
     }
 
@@ -154,6 +185,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.easy_action:
                 if (flashDuration != 750 || freePlay == true) {
                     freePlay= false;
+                    roundView.setEnabled(false);
+                    highScoreView.setEnabled(false);
                     flashDuration = 750;
                     resetGame();
                     playRounds();
@@ -162,6 +195,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.normal_action:
                 if (flashDuration != 500 || freePlay == true) {
                     freePlay= false;
+                    roundView.setEnabled(false);
+                    highScoreView.setEnabled(false);
                     flashDuration = 500;
                     resetGame();
                     playRounds();
@@ -170,6 +205,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.hard_action:
                 if (flashDuration != 250 || freePlay == true) {
                     freePlay= false;
+                    roundView.setEnabled(false);
+                    highScoreView.setEnabled(false);
                     flashDuration = 250;
                     resetGame();
                     playRounds();
@@ -177,8 +214,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.free_play_action:
                 freePlay = true;
+                roundView.setEnabled(true);
+                highScoreView.setEnabled(true);
                 resetGame();
-                round_view.setText("∞");
+                roundView.setText("∞");
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -187,8 +226,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //-------------------------------- Play Game Stuff --------------------------------
     public void playRounds() {
         //blink and set the round text
-        flashRoundView(round_view, R.drawable.round_number_flash_image);
-        round_view.setText(Integer.toString(rounds));
+        flashRoundView(roundView, R.drawable.round_number_flash_image);
+        roundView.setText(Integer.toString(rounds));
 
         //grab a random color
         colorsByComputer.add(getRandomColor());
@@ -255,8 +294,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return "B"; //will never get to this
     }
 
+    public void recordHighScore() {
+        if (rounds > highestScore) {
+            highestScore = rounds;
+            highScoreView.setText(Integer.toString(highestScore));
+        }
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt(HIGH_SCORE_KEY, highestScore);
+        editor.apply();
+    }
+
     //-------------------------------- Popup Window Stuff --------------------------------
     public void showOptions(Context context) { //when you lose
+        recordHighScore();
         resetGame();
 
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE); //create a layout inflater
@@ -360,6 +410,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         redButton.setBackground(originalBackgroundR);
         blueButton.setBackground(originalBackgroundB);
         yellowButton.setBackground(originalBackgroundY);
+        roundView.setBackground(originalBackgroundRV);
     }
 
     public final void resetSound() {
@@ -383,6 +434,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 mpYellowButton.stop();
                 mpYellowButton.release();
                 mpYellowButton = MediaPlayer.create(this, R.raw.futurama_bell4);
+            }
+            if (mpRoundView.isPlaying()) {
+                mpRoundView.stop();
+                mpRoundView.release();
+                mpRoundView = MediaPlayer.create(this, R.raw.futurama_bell5);
+            }
+            if (mpHighScoreView.isPlaying()) {
+                mpHighScoreView.stop();
+                mpHighScoreView.release();
+                mpHighScoreView = MediaPlayer.create(this, R.raw.futurama_bell6);
             }
         } catch(Exception e) { e.printStackTrace(); }
     }
