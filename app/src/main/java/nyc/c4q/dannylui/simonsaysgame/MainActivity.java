@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static int highestScore = 0;
     private static int rounds = 1;
     private static boolean freePlay = false;
+    private static int count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,6 +126,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         originalBackgroundB = blueButton.getBackground();
         originalBackgroundY = yellowButton.getBackground();
         originalBackgroundRV = roundView.getBackground();
+    }
+
+    public void disableButtonClicks() {
+        greenButton.setClickable(false);
+        redButton.setClickable(false);
+        blueButton.setClickable(false);
+        yellowButton.setClickable(false);
+    }
+
+    public void enableButtonClick() {
+        greenButton.setClickable(true);
+        redButton.setClickable(true);
+        blueButton.setClickable(true);
+        yellowButton.setClickable(true);
     }
 
     public void onClick(View v) {
@@ -231,6 +246,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //grab a random color
         colorsByComputer.add(getRandomColor());
+
+        disableButtonClicks();
 
         //flash through the color(s)
         for (int i = 0; i < colorsByComputer.size(); i++) {
@@ -369,9 +386,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         handler.postDelayed(r, buttonFlashDelay);
 
         buttonFlashDelay+=flashDuration;
+        System.out.println("DEFORE DELAY IS " + buttonFlashDelay);
         final Runnable r2 = new Runnable() {
             public void run() {
                 button.setBackground(originalBackground);
+                count++;
+                if (count == rounds) {
+                    enableButtonClick();
+                    count = 0;
+                }
             }
         };
         handler.postDelayed(r2, buttonFlashDelay);
