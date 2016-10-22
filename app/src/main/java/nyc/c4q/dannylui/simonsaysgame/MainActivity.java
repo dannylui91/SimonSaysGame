@@ -82,16 +82,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initButtonBackgrounds();
 
         //set unable to click for these two buttons except during free play
-        roundView.setEnabled(false);
+        roundView.setEnabled(true);
         highScoreView.setEnabled(false);
 
         //load prefs
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         highScoreView.setText(Integer.toString(prefs.getInt(HIGH_SCORE_KEY, 0)));
 
-        //play the round
+        //play the round when start is touched in the roundView
         if (!freePlay) {
-            playRounds();
+            disableButtonClicks();
+            roundView.setText("Start");
+            roundView.setTextSize(35.0f);
         }
     }
 
@@ -177,6 +179,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case R.id.round_view:
+                if (roundView.getText().toString().equals("Start")) {
+                    roundView.setEnabled(false);
+                    enableButtonClick();
+                    playRounds();
+                }
                 resetSound();
                 mpRoundView.start();
                 break;
